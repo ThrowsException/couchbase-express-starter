@@ -2,7 +2,7 @@ import express from "express";
 import cookieParser from "cookie-parser";
 import logger from "morgan";
 
-var indexRouter = require("./routes/index");
+// var indexRouter = require("./routes/index");
 var usersRouter = require("./routes/users");
 
 var app = express();

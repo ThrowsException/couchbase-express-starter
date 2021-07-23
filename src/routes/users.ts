@@ -1,5 +1,5 @@
 import express from "express";
-import { get } from "../db";
+// import { get } from "../db";
 import { wrap as w } from "./wrap";
 
 let router = express.Router();
@@ -12,8 +12,8 @@ type User = {
 router.get(
   "/:id",
   w(async (req, res, next) => {
-    const user = await get<User>(req.params.id);
-    res.json(user.name);
+    // const user = await get<User>(req.params.id);
+    res.json({ message: "hello world" });
   })
 );
 
