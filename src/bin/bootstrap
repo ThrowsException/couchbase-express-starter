@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -e
+
+# Common constants
+COLOR_RESET='\033[0m'
+COLOR_GREEN='\033[0;32m'
+COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-${PWD##*/}}"
+TEST_HOST="${TEST_HOST:-localhost}"
+
+CLUSTER_USERNAME=admin
+CLUSTER_PASSWORD=password
+COUCHBASE_BUCKET=data
+
+get_docker_port () {
+  echo $(docker-compose port $1 $2 | cut -d: -f2)
+}
+
+mkdir -p build
+
+docker compose down --remove-orphans
+docker compose pull --ignore-pull-failures
+docker compose up -d couchbase
+
+sleep 10
+docker compose exec couchbase couchbase-cli cluster-init --cluster-username ${CLUSTER_USERNAME} --cluster-password ${CLUSTER_PASSWORD}
+
+curl -X POST -u ${CLUSTER_USERNAME}:${CLUSTER_PASSWORD} \
+  http://localhost:$(get_docker_port couchbase 8091)/pools/default/buckets \
+  -d name=${COUCHBASE_BUCKET} \
+  -d bucketType=couchbase \
+  -d ramQuotaMB=1024
+
+cat << EOF > ./build/test_env
+export COUCHBASE_URL=couchbase://${TEST_HOST}
+export COUCHBASE_PORT=$(get_docker_port couchbase 11210)
+export COUCHBASE_USER=${CLUSTER_USERNAME}
+export COUCHBASE_PASSWORD=${CLUSTER_PASSWORD}
+export COUCHBASE_BUCKET=${COUCHBASE_BUCKET}
+EOF
